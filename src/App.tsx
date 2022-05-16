@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import Web3 from 'web3';
 import Wrapper from './components/Wrapper/Wrapper';
-import * as Dialog from '@radix-ui/react-dialog';
-import detectEthereumProvider from '@MetaMask/detect-provider';
-import { Button } from './components/Button/Button.styles';
 import { Card } from './components/Card/Card.styles';
 import * as Popover from '@radix-ui/react-popover';
 import { isMobile } from 'react-device-detect';
@@ -18,6 +15,7 @@ function App() {
     useEffect(() => {
         const init = () => {
             const handleEthereum = () => {
+                // @ts-ignore
                 const { ethereum } = window;
                 const w = new Web3(ethereum as any);
                 setWeb3(w);
@@ -51,6 +49,7 @@ function App() {
                 setWallets(wal);
             };
 
+            // @ts-ignore
             if (window.ethereum) {
                 handleEthereum();
             } else {
@@ -75,6 +74,7 @@ function App() {
         try {
             let selectedProvider = null;
             if (isMobile) {
+                // @ts-ignore
                 const { ethereum } = window;
                 selectedProvider = ethereum;
             } else {
