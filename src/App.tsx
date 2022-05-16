@@ -116,19 +116,24 @@ function App() {
     return (
         <Wrapper>
             <Popover.Root>
-                <Popover.Trigger style={{ background: 'transparent' }}>
-                    <Button>
-                        <p>
-                            {accounts[0] ? (
-                                <>
-                                    Connected as {accounts[0].slice(0, 6)}...
-                                    {accounts[0].slice(accounts[0].length - 3, accounts[0].length)}
-                                </>
-                            ) : (
-                                'Connect wallet'
-                            )}
-                        </p>
-                    </Button>
+                <Popover.Trigger
+                    style={{
+                        background: '#151718',
+                        padding: 10,
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                    }}
+                >
+                    <p>
+                        {accounts[0] ? (
+                            <>
+                                Connected as {accounts[0].slice(0, 6)}...
+                                {accounts[0].slice(accounts[0].length - 3, accounts[0].length)}
+                            </>
+                        ) : (
+                            'Connect wallet'
+                        )}
+                    </p>
                 </Popover.Trigger>
                 <Popover.Anchor color='red' />
                 <Popover.Content>
@@ -146,7 +151,7 @@ function App() {
                         <p>{web3 ? 'Provider detected' : 'Provider missing.'}</p>
                         <p>{error}</p>
                         {wallets.map(wallet => (
-                            <Card onClick={() => connect(wallet)}>
+                            <Card key={wallet} onClick={() => connect(wallet)}>
                                 <p>{wallet}</p>
                             </Card>
                         ))}
