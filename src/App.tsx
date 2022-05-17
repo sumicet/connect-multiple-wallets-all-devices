@@ -4,49 +4,83 @@ import Wrapper from './components/Wrapper/Wrapper';
 import { Card } from './components/Card/Card.styles';
 import * as Popover from '@radix-ui/react-popover';
 import { isMobile } from 'react-device-detect';
+import { CloseIcon } from './assets/images/CloseIcon';
+import * as Styled from './App.styles';
+import { openApp } from './utils/getDeepLink';
+
+interface Provider {
+    name: 'MetaMask' | 'Coinbase';
+    provider: any;
+}
+
+const defaultWallets = ['MetaMask', 'Coinbase'];
 
 function App() {
     const [web3, setWeb3] = useState<any>();
     const [accounts, setAccounts] = useState<string[]>([]);
-    const [isMetaMask, setIsMetaMask] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const [wallets, setWallets] = useState<string[]>([]);
+    const [providers, setProviders] = useState<Provider[]>([]);
+    const [wallet, setWallet] = useState<string | null>(null);
 
     useEffect(() => {
         const init = () => {
             const handleEthereum = () => {
                 // @ts-ignore
-                const { ethereum } = window;
-                const w = new Web3(ethereum as any);
-                setWeb3(w);
+                let provider: any = window.ethereum;
 
-                if (!w) {
-                    return;
+                if (!provider) {
+                    throw new Error('No providers detected.');
                 }
 
-                let wal: string[] = [];
+                let availableProviders: Provider[] = [];
 
-                if (isMobile) {
-                    if (ethereum?.isMetaMask) {
-                        wal.push('MetaMask');
-                    }
+                const web3 = new Web3(provider);
+
+                // @ts-ignore
+                console.log(web3?.eth?.currentProvider?.providers);
+
+                // Multiple wallet extensions
+                // @ts-ignore
+                if (web3?.eth?.currentProvider?.providers?.length) {
                     // @ts-ignore
-                    if (ethereum?.isCoinbaseWallet) {
-                        wal.push('Coinbase');
-                    }
-                } else {
-                    // @ts-ignore
-                    w.eth?.currentProvider?.providers?.forEach((provider: any) => {
-                        if (provider.isMetaMask && !wal.find(elem => elem === 'MetaMask')) {
-                            wal.push('MetaMask');
+                    web3?.eth?.currentProvider.providers.forEach((provider: any) => {
+                        console.log(provider.isMetaMask);
+                        if (
+                            provider.isMetaMask &&
+                            !availableProviders.find(elem => elem.name === 'MetaMask')
+                        ) {
+                            availableProviders.push({
+                                name: 'MetaMask',
+                                provider,
+                            });
                         }
-                        if (provider.isCoinbaseWallet && !wal.find(elem => elem === 'Coinbase')) {
-                            wal.push('Coinbase');
+                        if (
+                            provider.isCoinbaseWallet &&
+                            !availableProviders.find(elem => elem.name === 'Coinbase')
+                        ) {
+                            availableProviders.push({
+                                name: 'Coinbase',
+                                provider,
+                            });
                         }
                     });
+                } else {
+                    if (provider?.isMetaMask) {
+                        availableProviders.push({
+                            name: 'MetaMask',
+                            provider,
+                        });
+                    }
+                    // @ts-ignore
+                    if (provider?.isCoinbaseWallet) {
+                        availableProviders.push({
+                            name: 'Coinbase',
+                            provider,
+                        });
+                    }
                 }
 
-                setWallets(wal);
+                setProviders(availableProviders);
             };
 
             // @ts-ignore
@@ -67,50 +101,57 @@ function App() {
     }, []);
 
     const connect = async (name: string) => {
-        if (!web3) {
+        if (isMobile && !providers.length) {
+            if (name === 'MetaMask') {
+                window.open(
+                    `https://metamask.app.link/dapp/${window.location.href.replace(
+                        /(^\w+:|^)\/\//,
+                        ''
+                    )}`,
+                    '_blank',
+                    'noopener noreferrer'
+                );
+                return;
+            } else if (name === 'Coinbase') {
+                window.open(
+                    `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(window.location.href)}`,
+                    '_blank',
+                    'noopener noreferrer'
+                );
+                return;
+            }
+        }
+
+        if (!providers.length) {
+            setError('No providers here.');
             return;
         }
 
         try {
-            let selectedProvider = null;
-            if (isMobile) {
-                // @ts-ignore
-                const { ethereum } = window;
-                selectedProvider = ethereum;
-            } else {
-                web3.eth?.currentProvider?.providers?.forEach((provider: any) => {
-                    if (provider.isMetaMask && name === 'MetaMask') {
-                        selectedProvider = provider;
-                    }
-                    if (provider.isCoinbaseWallet && name === 'Coinbase') {
-                        selectedProvider = provider;
-                    }
-                });
-            }
+            const provider = providers.find(elem => elem.name === name);
 
-            if (!selectedProvider) {
+            if (!provider) {
+                setError('Unable to find provider.');
                 return;
             }
 
-            const selectedWeb3 = new Web3(selectedProvider as any);
-            if (accounts[0]) {
-                const signPromise = await selectedWeb3.eth.personal.sign(
-                    'Sign something...',
-                    accounts[0],
-                    ''
-                );
-            } else {
-                const a = await selectedWeb3.eth.requestAccounts();
-                const signPromise = await selectedWeb3.eth.personal.sign(
-                    'Sign something...',
-                    a[0],
-                    ''
-                );
-                setAccounts(a);
-            }
+            const web3 = new Web3(provider.provider);
+            const a = await web3.eth.requestAccounts();
+            const signPromise = await web3.eth.personal.sign('Connect wallet', a[0], '');
+            setAccounts(a);
+            setWeb3(web3);
+            setWallet(provider.name);
+            setError(null);
         } catch (err: any) {
             setError(err.message || 'Oops.');
         }
+    };
+
+    const disconnect = () => {
+        setWallet(null);
+        setError(null);
+        setAccounts([]);
+        setWeb3(undefined);
     };
 
     return (
@@ -136,27 +177,69 @@ function App() {
                     </p>
                 </Popover.Trigger>
                 <Popover.Anchor color='red' />
-                <Popover.Content>
+                <Popover.Content
+                    style={{
+                        background: '#151718',
+                        display: 'grid',
+                        gap: 10,
+                        gridColumn: 1,
+                        padding: 10,
+                        borderRadius: 8,
+                        maxWidth: '80vw',
+                    }}
+                >
                     <div
                         style={{
-                            background: '#151718',
-                            display: 'grid',
-                            gap: 10,
-                            gridColumn: 1,
-                            padding: 10,
-                            borderRadius: 8,
-                            maxWidth: '80vw',
+                            background: 'transparent',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            display: 'flex',
                         }}
                     >
-                        <p>{web3 ? 'Provider detected' : 'Provider missing.'}</p>
-                        <p>{error}</p>
-                        {wallets.map(wallet => (
-                            <Card key={wallet} onClick={() => connect(wallet)}>
-                                <p>{wallet}</p>
-                            </Card>
-                        ))}
+                        <p>
+                            {web3 ? (
+                                <>
+                                    Connected with <b>{wallet}</b>.
+                                </>
+                            ) : (
+                                'No wallet selected.'
+                            )}
+                        </p>
+                        <Popover.Close
+                            style={{
+                                background: 'transparent',
+                                cursor: 'pointer',
+                                marginLeft: 10,
+                            }}
+                        >
+                            <Styled.IconContainer>
+                                <CloseIcon />
+                            </Styled.IconContainer>
+                        </Popover.Close>
                     </div>
-                    <Popover.Close />
+                    {error && <p>{error}</p>}
+                    {wallet ? (
+                        <Card onClick={disconnect}>
+                            <p>Disconnect</p>
+                        </Card>
+                    ) : (
+                        defaultWallets.map(name => {
+                            const disabled =
+                                !providers.find(elem => elem.name === name) && !!providers.length;
+                            return (
+                                <Card
+                                    key={name}
+                                    onClick={event => {
+                                        !disabled && connect(name);
+                                    }}
+                                    disabled={disabled}
+                                >
+                                    <p>{name}</p>
+                                </Card>
+                            );
+                        })
+                    )}
+
                     <Popover.Arrow fill='#151718' />
                 </Popover.Content>
             </Popover.Root>
