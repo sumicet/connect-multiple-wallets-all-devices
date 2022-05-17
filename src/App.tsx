@@ -6,7 +6,6 @@ import * as Popover from '@radix-ui/react-popover';
 import { isMobile } from 'react-device-detect';
 import { CloseIcon } from './assets/images/CloseIcon';
 import * as Styled from './App.styles';
-import { openApp } from './utils/getDeepLink';
 
 interface Provider {
     name: 'MetaMask' | 'Coinbase';

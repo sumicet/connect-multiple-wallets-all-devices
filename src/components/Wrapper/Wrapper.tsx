@@ -1,7 +1,4 @@
-import WalletConnectProvider from '@walletconnect/web3-provider';
-import QRCodeModal from '@walletconnect/qrcode-modal';
-import Web3 from 'web3';
-import { ReactNode, useEffect } from 'react';
+import { ReactNode } from 'react';
 import * as Styled from './Wrapper.styles';
 
 interface BodyWrapperProps {
