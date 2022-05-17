@@ -41,7 +41,8 @@ function ConnectWalletCard({
         providers &&
         providers[0] &&
         providers[0].provider.chainId &&
-        title === 'Web3React';
+        title === 'Web3React' &&
+        wallet;
 
     const metamaskChainId = useMetamaskChainId();
     const coinbaseChainId = useCoinbaseChainId();
@@ -101,9 +102,10 @@ function ConnectWalletCard({
                             })
                         )}
                     </div>
-                    <div style={{ display: 'grid', gap: 10 }}>
-                        {showNetworks &&
-                            [1, 137].map(id => {
+
+                    {showNetworks && (
+                        <div style={{ display: 'grid', gap: 10 }}>
+                            {[1, 137].map(id => {
                                 const chainId =
                                     wallet === 'MetaMask' ? metamaskChainId : coinbaseChainId;
                                 console.log(chainId);
@@ -129,7 +131,8 @@ function ConnectWalletCard({
                                     );
                                 }
                             })}
-                    </div>
+                        </div>
+                    )}
                 </Grid>
             </div>
         </div>
