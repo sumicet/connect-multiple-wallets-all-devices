@@ -85,7 +85,8 @@ function ConnectWalletCard({
                             defaultWallets.map(name => {
                                 const disabled =
                                     !providers.find(elem => elem.name === name) &&
-                                    !!providers.length;
+                                    !!providers.length &&
+                                    title === 'Injected Provider';
                                 return (
                                     <Card
                                         key={name}
