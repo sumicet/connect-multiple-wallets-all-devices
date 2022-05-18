@@ -34,7 +34,7 @@ function ConnectWalletCard({
     connect: (name: 'MetaMask' | 'Coinbase') => Promise<void>;
     wallet: 'MetaMask' | 'Coinbase' | null;
     providers: Provider[];
-    switchNetwork: ((chainId: number) => void) | null;
+    switchNetwork: ((chainId: number) => Promise<void>) | null;
 }) {
     const showNetworks =
         switchNetwork &&

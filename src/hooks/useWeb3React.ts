@@ -81,7 +81,7 @@ export function useWeb3React() {
         setAccount(null);
     };
 
-    const switchNetwork = (chainId: number) => {
+    const switchNetwork = async (chainId: number) => {
         if (!connector) {
             return;
         }
@@ -89,56 +89,70 @@ export function useWeb3React() {
         try {
             if (chainId === 1) {
                 try {
-                    connector?.provider?.request({
+                    await connector?.provider?.request({
                         method: 'wallet_switchEthereumChain',
                         params: [{ chainId: Web3.utils.toHex(137) }],
                     });
                 } catch (err: any) {
-                    connector?.provider?.request({
-                        method: 'wallet_addEthereumChain',
-                        params: [
-                            {
-                                chainName: 'Polygon',
-                                chainId: Web3.utils.toHex(137),
-                                nativeCurrency: { name: 'MATIC', decimals: 18, symbol: 'MATIC' },
-                                rpcUrls: [
-                                    'https://polygon-mainnet.public.blastapi.io',
-                                    'https://matic-mainnet.chainstacklabs.com',
-                                    'https://polygon-rpc.com',
-                                    'https://polygon-mainnet.public.blastapi.io',
-                                    'https://rpc-mainnet.matic.quiknode.pro',
-                                ],
-                                blockExplorerUrls: ['https://polygonscan.com/'],
-                                iconUrls: ['https://polygonscan.com/images/logo-white.svg?v=0.0.2'],
-                            },
-                        ],
-                    });
+                    try {
+                        await connector?.provider?.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [
+                                {
+                                    chainName: 'Polygon',
+                                    chainId: Web3.utils.toHex(137),
+                                    nativeCurrency: {
+                                        name: 'MATIC',
+                                        decimals: 18,
+                                        symbol: 'MATIC',
+                                    },
+                                    rpcUrls: [
+                                        'https://polygon-mainnet.public.blastapi.io',
+                                        'https://matic-mainnet.chainstacklabs.com',
+                                        'https://polygon-rpc.com',
+                                        'https://polygon-mainnet.public.blastapi.io',
+                                        'https://rpc-mainnet.matic.quiknode.pro',
+                                    ],
+                                    blockExplorerUrls: ['https://polygonscan.com/'],
+                                    iconUrls: [
+                                        'https://polygonscan.com/images/logo-white.svg?v=0.0.2',
+                                    ],
+                                },
+                            ],
+                        });
+                    } catch (err: any) {
+                        console.log(err);
+                    }
                 }
             } else {
                 try {
-                    connector?.provider?.request({
+                    await connector?.provider?.request({
                         method: 'wallet_switchEthereumChain',
                         params: [{ chainId: Web3.utils.toHex(1) }],
                     });
                 } catch (err: any) {
-                    connector?.provider?.request({
-                        method: 'wallet_addEthereumChain',
-                        params: [
-                            {
-                                chainName: 'Ethereum',
-                                chainId: Web3.utils.toHex(1),
-                                nativeCurrency: {
-                                    decimals: 18,
-                                    name: 'ETH',
-                                    symbol: 'ETH',
+                    try {
+                        await connector?.provider?.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [
+                                {
+                                    chainName: 'Ethereum',
+                                    chainId: Web3.utils.toHex(1),
+                                    nativeCurrency: {
+                                        decimals: 18,
+                                        name: 'ETH',
+                                        symbol: 'ETH',
+                                    },
+                                    rpcUrls: [
+                                        'https://eth-mainnet.public.blastapi.io',
+                                        'https://rpc.ankr.com/eth',
+                                    ],
                                 },
-                                rpcUrls: [
-                                    'https://eth-mainnet.public.blastapi.io',
-                                    'https://rpc.ankr.com/eth',
-                                ],
-                            },
-                        ],
-                    });
+                            ],
+                        });
+                    } catch (err: any) {
+                        console.log(err);
+                    }
                 }
             }
         } catch (err: any) {
