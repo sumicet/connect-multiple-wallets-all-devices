@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import Web3 from 'web3';
+import { openMobileApp } from '../utils/openApp';
 
 export interface Provider {
     name: 'MetaMask' | 'Coinbase';
@@ -89,24 +90,8 @@ export function useInjectedProvider() {
 
     const connect = async (name: 'MetaMask' | 'Coinbase') => {
         if (isMobile && !providers.length) {
-            if (name === 'MetaMask') {
-                window.open(
-                    `https://metamask.app.link/dapp/${window.location.href.replace(
-                        /(^\w+:|^)\/\//,
-                        ''
-                    )}`,
-                    '_blank',
-                    'noopener noreferrer'
-                );
-                return;
-            } else if (name === 'Coinbase') {
-                window.open(
-                    `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(window.location.href)}`,
-                    '_blank',
-                    'noopener noreferrer'
-                );
-                return;
-            }
+            openMobileApp(name);
+            return;
         }
 
         if (!providers.length) {

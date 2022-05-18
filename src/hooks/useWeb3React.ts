@@ -1,8 +1,10 @@
 import { CoinbaseWallet } from '@web3-react/coinbase-wallet';
 import { MetaMask } from '@web3-react/metamask';
 import { useEffect, useState } from 'react';
+import { isMobile } from 'react-device-detect';
 import Web3 from 'web3';
 import { metaMask, coinbase } from '../connectors/connectors';
+import { openMobileApp } from '../utils/openApp';
 
 export interface Provider {
     name: 'MetaMask' | 'Coinbase';
@@ -32,6 +34,11 @@ export function useWeb3React() {
 
         try {
             if (!connector) {
+                return;
+            }
+
+            if (isMobile && !window.ethereum) {
+                openMobileApp(name);
                 return;
             }
 
@@ -74,36 +81,68 @@ export function useWeb3React() {
         setAccount(null);
     };
 
-    const switchNetwork = async (chainId: number) => {
+    const switchNetwork = (chainId: number) => {
         if (!connector) {
             return;
         }
 
-        if (chainId === 1) {
-            await connector.activate({
-                chainName: 'Polygon Mainnet',
-                chainId: 137,
-                nativeCurrency: {
-                    decimals: 18,
-                    name: 'MATIC',
-                    symbol: 'MATIC',
-                },
-                rpcUrls: [
-                    'https://polygon-mainnet.public.blastapi.io',
-                    'https://matic-mainnet.chainstacklabs.com',
-                ],
-            });
-        } else {
-            await connector.activate({
-                chainName: 'Ethereum Mainnet',
-                chainId: 1,
-                nativeCurrency: {
-                    decimals: 18,
-                    name: 'ETH',
-                    symbol: 'ETH',
-                },
-                rpcUrls: ['https://eth-mainnet.public.blastapi.io', 'https://rpc.ankr.com/eth'],
-            });
+        try {
+            if (chainId === 1) {
+                try {
+                    connector?.provider?.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: Web3.utils.toHex(137) }],
+                    });
+                } catch (err: any) {
+                    connector?.provider?.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [
+                            {
+                                chainName: 'Polygon',
+                                chainId: Web3.utils.toHex(137),
+                                nativeCurrency: { name: 'MATIC', decimals: 18, symbol: 'MATIC' },
+                                rpcUrls: [
+                                    'https://polygon-mainnet.public.blastapi.io',
+                                    'https://matic-mainnet.chainstacklabs.com',
+                                    'https://polygon-rpc.com',
+                                    'https://polygon-mainnet.public.blastapi.io',
+                                    'https://rpc-mainnet.matic.quiknode.pro',
+                                ],
+                                blockExplorerUrls: ['https://polygonscan.com/'],
+                                iconUrls: ['https://polygonscan.com/images/logo-white.svg?v=0.0.2'],
+                            },
+                        ],
+                    });
+                }
+            } else {
+                try {
+                    connector?.provider?.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: Web3.utils.toHex(1) }],
+                    });
+                } catch (err: any) {
+                    connector?.provider?.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [
+                            {
+                                chainName: 'Ethereum',
+                                chainId: Web3.utils.toHex(1),
+                                nativeCurrency: {
+                                    decimals: 18,
+                                    name: 'ETH',
+                                    symbol: 'ETH',
+                                },
+                                rpcUrls: [
+                                    'https://eth-mainnet.public.blastapi.io',
+                                    'https://rpc.ankr.com/eth',
+                                ],
+                            },
+                        ],
+                    });
+                }
+            }
+        } catch (err: any) {
+            alert(err.message);
         }
     };
 

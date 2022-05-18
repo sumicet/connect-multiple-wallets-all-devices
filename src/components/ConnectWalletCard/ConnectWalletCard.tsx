@@ -34,7 +34,7 @@ function ConnectWalletCard({
     connect: (name: 'MetaMask' | 'Coinbase') => Promise<void>;
     wallet: 'MetaMask' | 'Coinbase' | null;
     providers: Provider[];
-    switchNetwork: ((chainId: number) => Promise<void>) | null;
+    switchNetwork: ((chainId: number) => void) | null;
 }) {
     const showNetworks =
         switchNetwork &&
@@ -46,6 +46,7 @@ function ConnectWalletCard({
 
     const metamaskChainId = useMetamaskChainId();
     const coinbaseChainId = useCoinbaseChainId();
+    const { error } = useWeb3React();
 
     return (
         <div>
@@ -75,7 +76,7 @@ function ConnectWalletCard({
                         'Wallet not connected.'
                     )}
                 </p>
-                {/* {error && <p>{error}</p>} */}
+                {error && <p>{error}</p>}
                 <Grid columns={showNetworks ? 2 : 0}>
                     <div style={{ display: 'grid', gap: 10 }}>
                         {wallet ? (
@@ -108,7 +109,6 @@ function ConnectWalletCard({
                             {[1, 137].map(id => {
                                 const chainId =
                                     wallet === 'MetaMask' ? metamaskChainId : coinbaseChainId;
-                                console.log(chainId);
 
                                 if (!chainId) {
                                     return null;
@@ -118,7 +118,7 @@ function ConnectWalletCard({
                                     return (
                                         <div key={id}>
                                             <Card
-                                                onClick={async () => {
+                                                onClick={() => {
                                                     switchNetwork(chainId);
                                                 }}
                                             >
